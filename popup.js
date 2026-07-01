@@ -1,7 +1,7 @@
-// popup.js - Chrome扩展配置界面脚本
+// popup.js - Chrome extension configuration UI script
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // 加载已保存的配置
+    // Load saved config
     const config = await chrome.storage.sync.get(['apiUrl', 'connectionToken', 'refreshInterval']);
 
     if (config.apiUrl) {
@@ -14,72 +14,72 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('refreshInterval').value = config.refreshInterval;
     }
 
-    // 保存配置
+    // Save config
     document.getElementById('saveBtn').addEventListener('click', async () => {
         const apiUrl = document.getElementById('apiUrl').value.trim();
         const connectionToken = document.getElementById('connectionToken').value.trim();
         const refreshInterval = parseInt(document.getElementById('refreshInterval').value);
 
         if (!apiUrl || !connectionToken) {
-            showStatus('请填写完整的配置信息', 'error');
+            showStatus('Please fill in all configuration fields', 'error');
             return;
         }
 
         if (refreshInterval < 1 || refreshInterval > 1440) {
-            showStatus('刷新间隔必须在1-1440分钟之间', 'error');
+            showStatus('Refresh interval must be between 1-1440 minutes', 'error');
             return;
         }
 
-        // 保存配置
+        // Save config
         await chrome.storage.sync.set({
             apiUrl,
             connectionToken,
             refreshInterval
         });
 
-        // 通知background script更新定时器
+        // Notify background script to update timer
         chrome.runtime.sendMessage({
             action: 'updateConfig',
             config: { apiUrl, connectionToken, refreshInterval }
         });
 
-        showStatus('配置保存成功！', 'success');
+        showStatus('Configuration saved successfully!', 'success');
     });
 
-    // 立即测试
+    // Test immediately
     document.getElementById('testBtn').addEventListener('click', async () => {
         const apiUrl = document.getElementById('apiUrl').value.trim();
         const connectionToken = document.getElementById('connectionToken').value.trim();
 
         if (!apiUrl || !connectionToken) {
-            showStatus('请先填写并保存配置', 'error');
+            showStatus('Please fill in and save the configuration first', 'error');
             return;
         }
 
-        showStatus('正在测试连接...', 'info');
+        showStatus('Testing connection...', 'info');
 
-        // 通知background script立即执行一次
+        // Notify background script to execute immediately
         chrome.runtime.sendMessage({
             action: 'testNow'
         }, (response) => {
             if (response && response.success) {
-                // 根据action显示不同的成功信息
+                // Show different success messages based on action
                 let statusMessage = '';
                 if (response.action === 'updated') {
-                    statusMessage = `✅ 测试成功！Token已更新到上游\n${response.message}`;
+                    statusMessage = `✅ Test successful! Token updated to upstream\n${response.message}`;
                 } else if (response.action === 'added') {
-                    statusMessage = `✅ 测试成功！Token已添加到上游\n${response.message}`;
+                    statusMessage = `✅ Test successful! Token added to upstream\n${response.message}`;
                 } else {
-                    statusMessage = `✅ 测试成功！${response.message}`;
+                    statusMessage = `✅ Test successful! ${response.message}`;
                 }
                 showStatus(statusMessage, 'success');
             } else {
-                showStatus(`❌ 测试失败：${response ? response.error : '未知错误'}`, 'error');
+                showStatus(`❌ Test failed: ${response ? response.error : 'Unknown error'}`, 'error');
             }
         });
     });
 
-    // 查看日志
+    // View logs
     document.getElementById('logsBtn').addEventListener('click', () => {
         window.location.href = 'logs.html';
     });
@@ -91,7 +91,7 @@ function showStatus(message, type) {
     statusEl.className = `status ${type}`;
     statusEl.style.display = 'block';
 
-    // 3秒后自动隐藏
+    // Auto-hide after 3 seconds
     setTimeout(() => {
         statusEl.style.display = 'none';
     }, 3000);

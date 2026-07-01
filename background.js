@@ -1,9 +1,9 @@
-// background.js - Chrome扩展后台脚本
+// background.js - Chrome extension background script
 
-// 定时器名称
+// Timer name
 const ALARM_NAME = 'tokenRefresh';
 
-// 日志系统
+// Logging system
 const Logger = {
     async log(level, message, details = null) {
         const timestamp = new Date().toISOString();
@@ -16,11 +16,11 @@ const Logger = {
 
         console.log(`[${level}] ${message}`, details || '');
 
-        // 存储到chrome.storage.local（单次会话有效）
+        // Store to chrome.storage.local (single session)
         const { logs = [] } = await chrome.storage.local.get(['logs']);
-        logs.unshift(logEntry); // 最新的在前面
+        logs.unshift(logEntry); // newest first
 
-        // 只保留最近50条日志
+        // Keep only the most recent 50 log entries
         if (logs.length > 50) {
             logs.splice(50);
         }
@@ -50,35 +50,35 @@ const Logger = {
     }
 };
 
-// 初始化：设置定时器
+// Initialize: set up timer
 chrome.runtime.onInstalled.addListener(async () => {
     await Logger.info('Flow2API Token Updater installed');
     await setupAlarm();
 });
 
-// 监听来自popup的消息
+// Listen for messages from popup
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === 'updateConfig') {
-        // 更新配置后重新设置定时器
+        // Reset timer after config update
         setupAlarm().then(async () => {
             await Logger.info('Config updated, alarm reset');
         });
     } else if (request.action === 'testNow') {
-        // 立即执行一次
+        // Execute once immediately
         extractAndSendToken().then((result) => {
             sendResponse(result);
         }).catch((error) => {
             sendResponse({ success: false, error: error.message });
         });
-        return true; // 保持消息通道开启
+        return true; // Keep message channel open
     } else if (request.action === 'getLogs') {
-        // 获取日志
+        // Get logs
         Logger.getLogs().then((logs) => {
             sendResponse({ success: true, logs });
         });
         return true;
     } else if (request.action === 'clearLogs') {
-        // 清除日志
+        // Clear logs
         Logger.clearLogs().then(() => {
             sendResponse({ success: true });
         });
@@ -86,16 +86,16 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
 });
 
-// 监听定时器触发
+// Listen for timer trigger
 chrome.alarms.onAlarm.addListener(async (alarm) => {
     if (alarm.name === ALARM_NAME) {
         await Logger.info('Alarm triggered, extracting token...');
         const result = await extractAndSendToken();
 
-        // 发送通知
+        // Send notification
         if (result.success) {
-            const title = result.action === 'updated' ? '✅ Token已更新' : '✅ Token已添加';
-            const message = result.displayMessage || result.message || 'Token已成功同步到Flow2API';
+            const title = result.action === 'updated' ? '✅ Token updated' : '✅ Token added';
+            const message = result.displayMessage || result.message || 'Token synced to Flow2API successfully';
 
             chrome.notifications.create({
                 type: 'basic',
@@ -107,23 +107,23 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
             chrome.notifications.create({
                 type: 'basic',
                 iconUrl: 'icon48.png',
-                title: '❌ Token同步失败',
-                message: result.error || '未知错误'
+                title: '❌ Token sync failed',
+                message: result.error || 'Unknown error'
             });
         }
     }
 });
 
-// 设置定时器
+// Set up timer
 async function setupAlarm() {
-    // 清除旧的定时器
+    // Clear old timer
     await chrome.alarms.clear(ALARM_NAME);
 
-    // 获取配置
+    // Get config
     const config = await chrome.storage.sync.get(['refreshInterval']);
     const intervalMinutes = config.refreshInterval || 60;
 
-    // 创建新的定时器
+    // Create new timer
     chrome.alarms.create(ALARM_NAME, {
         periodInMinutes: intervalMinutes
     });
@@ -131,33 +131,33 @@ async function setupAlarm() {
     await Logger.info(`Alarm set to ${intervalMinutes} minutes`);
 }
 
-// 提取cookie并发送到服务器
+// Extract cookie and send to server
 async function extractAndSendToken() {
     let tab = null;
 
     try {
-        await Logger.info('开始提取Token...');
+        await Logger.info('Starting token extraction...');
 
-        // 获取配置
+        // Get config
         const config = await chrome.storage.sync.get(['apiUrl', 'connectionToken']);
 
         if (!config.apiUrl || !config.connectionToken) {
-            await Logger.error('配置未设置');
-            return { success: false, error: '配置未设置' };
+            await Logger.error('Config not set');
+            return { success: false, error: 'Config not set' };
         }
 
-        await Logger.info('配置已加载', { apiUrl: config.apiUrl });
+        await Logger.info('Config loaded', { apiUrl: config.apiUrl });
 
-        // 1. 打开Google Labs页面（在后台）
-        await Logger.info('正在打开Google Labs页面...');
+        // 1. Open Google Labs page (in background)
+        await Logger.info('Opening Google Labs page...');
         tab = await chrome.tabs.create({
             url: 'https://labs.google/fx/vi/tools/flow',
             active: false
         });
 
-        await Logger.info('页面已创建，等待加载...', { tabId: tab.id });
+        await Logger.info('Page created, waiting for load...', { tabId: tab.id });
 
-        // 等待页面完全加载
+        // Wait for page to fully load
         await new Promise((resolve) => {
             const listener = (tabId, changeInfo) => {
                 if (tabId === tab.id && changeInfo.status === 'complete') {
@@ -168,52 +168,52 @@ async function extractAndSendToken() {
             chrome.tabs.onUpdated.addListener(listener);
         });
 
-        await Logger.info('页面加载完成，等待JavaScript执行...');
+        await Logger.info('Page loaded, waiting for JavaScript execution...');
 
-        // 增加等待时间到5秒，确保JavaScript完全执行
+        // Wait additional 5 seconds to ensure JavaScript fully executes
         await new Promise(resolve => setTimeout(resolve, 5000));
 
-        await Logger.info('开始提取Cookies...');
+        await Logger.info('Starting cookie extraction...');
 
-        // 2. 获取session-token
+        // 2. Get session-token
         let sessionToken = null;
         let allCookiesFound = [];
 
-        // 尝试获取所有google相关的cookies
+        // Try to get all google-related cookies
         try {
-            // 方法1: 获取当前标签页的所有cookies
+            // Method 1: Get all cookies for the current tab
             const tabCookies = await chrome.cookies.getAll({ url: 'https://labs.google/fx/vi/tools/flow' });
             allCookiesFound.push(...tabCookies);
-            await Logger.info(`从标签页URL找到 ${tabCookies.length} 个cookies`);
+            await Logger.info(`Found ${tabCookies.length} cookies from tab URL`);
 
-            // 方法2: 获取labs.google域名下的所有cookies
+            // Method 2: Get all cookies under labs.google domain
             const labsCookies = await chrome.cookies.getAll({ domain: 'labs.google' });
             allCookiesFound.push(...labsCookies);
-            await Logger.info(`从labs.google域名找到 ${labsCookies.length} 个cookies`);
+            await Logger.info(`Found ${labsCookies.length} cookies from labs.google domain`);
 
-            // 方法3: 获取.google.com域名下的所有cookies
+            // Method 3: Get all cookies under .google.com domain
             const googleCookies = await chrome.cookies.getAll({ domain: '.google.com' });
             allCookiesFound.push(...googleCookies);
-            await Logger.info(`从.google.com域名找到 ${googleCookies.length} 个cookies`);
+            await Logger.info(`Found ${googleCookies.length} cookies from .google.com domain`);
 
         } catch (err) {
-            await Logger.error('获取cookies失败', { error: err.message });
+            await Logger.error('Failed to get cookies', { error: err.message });
         }
 
-        // 去重所有找到的cookies
+        // Deduplicate all found cookies
         const uniqueCookies = Array.from(
             new Map(allCookiesFound.map(c => [c.name + c.domain, c])).values()
         );
 
-        await Logger.info(`总共找到 ${uniqueCookies.length} 个唯一cookies`, {
+        await Logger.info(`Total of ${uniqueCookies.length} unique cookies found`, {
             cookieNames: uniqueCookies.map(c => ({ name: c.name, domain: c.domain }))
         });
 
-        // 查找session-token
+        // Look for session-token
         for (const cookie of uniqueCookies) {
             if (cookie.name === '__Secure-next-auth.session-token' && !sessionToken) {
                 sessionToken = cookie.value;
-                await Logger.success('找到session-token', {
+                await Logger.success('Found session-token', {
                     domain: cookie.domain,
                     path: cookie.path,
                     length: sessionToken.length
@@ -222,14 +222,14 @@ async function extractAndSendToken() {
             }
         }
 
-        // 关闭标签页
+        // Close tab
         if (tab) {
             await chrome.tabs.remove(tab.id);
-            await Logger.info('标签页已关闭');
+            await Logger.info('Tab closed');
         }
 
         if (!sessionToken) {
-            await Logger.error('未找到session-token', {
+            await Logger.error('Session-token not found', {
                 foundCookies: uniqueCookies.map(c => ({
                     name: c.name,
                     domain: c.domain
@@ -238,14 +238,14 @@ async function extractAndSendToken() {
 
             return {
                 success: false,
-                error: '未找到session-token。请确保已登录Google Labs。'
+                error: 'Session-token not found. Please ensure you are logged in to Google Labs.'
             };
         }
 
-        await Logger.info('Session-token提取成功', { tokenLength: sessionToken.length });
+        await Logger.info('Session-token extracted successfully', { tokenLength: sessionToken.length });
 
-        // 4. 发送到服务器
-        await Logger.info('正在发送到服务器...');
+        // 4. Send to server
+        await Logger.info('Sending to server...');
 
         const response = await fetch(config.apiUrl, {
             method: 'POST',
@@ -260,51 +260,51 @@ async function extractAndSendToken() {
 
         if (!response.ok) {
             const errorText = await response.text();
-            await Logger.error('服务器错误', {
+            await Logger.error('Server error', {
                 status: response.status,
                 error: errorText
             });
-            return { success: false, error: `服务器错误: ${response.status}` };
+            return { success: false, error: `Server error: ${response.status}` };
         }
 
         const result = await response.json();
 
-        // 根据action显示不同的日志信息
+        // Show different log messages based on action
         if (result.action === 'updated') {
-            await Logger.success('✅ Token已更新到上游', {
-                action: '更新现有Token',
+            await Logger.success('✅ Token updated to upstream', {
+                action: 'Update existing token',
                 message: result.message
             });
         } else if (result.action === 'added') {
-            await Logger.success('✅ Token已添加到上游', {
-                action: '添加新Token',
+            await Logger.success('✅ Token added to upstream', {
+                action: 'Add new token',
                 message: result.message
             });
         } else {
-            await Logger.success('✅ Token已同步到上游', result);
+            await Logger.success('✅ Token synced to upstream', result);
         }
 
         return {
             success: true,
-            message: result.message || 'Token更新成功',
+            message: result.message || 'Token updated successfully',
             action: result.action,
             displayMessage: result.action === 'updated'
-                ? `✅ 成功更新到上游\n${result.message}`
-                : `✅ 成功添加到上游\n${result.message}`
+                ? `✅ Successfully updated to upstream\n${result.message}`
+                : `✅ Successfully added to upstream\n${result.message}`
         };
 
     } catch (error) {
-        await Logger.error('提取过程出错', {
+        await Logger.error('Error during extraction', {
             error: error.message,
             stack: error.stack
         });
 
-        // 确保关闭标签页
+        // Ensure tab is closed
         if (tab) {
             try {
                 await chrome.tabs.remove(tab.id);
             } catch (e) {
-                // 忽略关闭标签页的错误
+                // Ignore errors when closing tab
             }
         }
 

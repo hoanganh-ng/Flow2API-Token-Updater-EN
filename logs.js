@@ -1,25 +1,25 @@
-// logs.js - 日志查看页面脚本
+// logs.js - Logs viewer page script
 
-// 格式化时间
+// Format time
 function formatTime(isoString) {
     const date = new Date(isoString);
     const now = new Date();
     const diff = now - date;
 
-    // 如果是今天
+    // If today
     if (date.toDateString() === now.toDateString()) {
-        return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     }
 
-    // 如果是昨天
+    // If yesterday
     const yesterday = new Date(now);
     yesterday.setDate(yesterday.getDate() - 1);
     if (date.toDateString() === yesterday.toDateString()) {
-        return '昨天 ' + date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+        return 'Yesterday ' + date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
     }
 
-    // 其他日期
-    return date.toLocaleString('zh-CN', {
+    // Other dates
+    return date.toLocaleString('en-US', {
         month: '2-digit',
         day: '2-digit',
         hour: '2-digit',
@@ -27,7 +27,7 @@ function formatTime(isoString) {
     });
 }
 
-// 渲染日志
+// Render logs
 function renderLogs(logs) {
     const container = document.getElementById('logsContainer');
 
@@ -35,7 +35,7 @@ function renderLogs(logs) {
         container.innerHTML = `
             <div class="empty-state">
                 <div class="empty-state-icon">📝</div>
-                <div>暂无日志记录</div>
+                <div>No log records yet</div>
             </div>
         `;
         return;
@@ -59,7 +59,7 @@ function renderLogs(logs) {
     }).join('');
 }
 
-// 加载日志
+// Load logs
 async function loadLogs() {
     chrome.runtime.sendMessage({ action: 'getLogs' }, (response) => {
         if (response && response.success) {
@@ -68,16 +68,16 @@ async function loadLogs() {
             document.getElementById('logsContainer').innerHTML = `
                 <div class="empty-state">
                     <div class="empty-state-icon">❌</div>
-                    <div>加载日志失败</div>
+                    <div>Failed to load logs</div>
                 </div>
             `;
         }
     });
 }
 
-// 清空日志
+// Clear logs
 async function clearLogs() {
-    if (!confirm('确定要清空所有日志吗？')) {
+    if (!confirm('Are you sure you want to clear all logs?')) {
         return;
     }
 
@@ -88,21 +88,21 @@ async function clearLogs() {
     });
 }
 
-// 初始化
+// Initialize
 document.addEventListener('DOMContentLoaded', () => {
     loadLogs();
 
-    // 刷新按钮
+    // Refresh button
     document.getElementById('refreshBtn').addEventListener('click', loadLogs);
 
-    // 清空按钮
+    // Clear button
     document.getElementById('clearBtn').addEventListener('click', clearLogs);
 
-    // 返回按钮
+    // Back button
     document.getElementById('backBtn').addEventListener('click', () => {
         window.location.href = 'popup.html';
     });
 
-    // 自动刷新（每5秒）
+    // Auto refresh (every 5 seconds)
     setInterval(loadLogs, 5000);
 });

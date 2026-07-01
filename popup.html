@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -121,30 +121,30 @@
     <h1>🔄 Flow2API Token Updater</h1>
 
     <div class="form-group">
-        <label for="apiUrl">连接接口</label>
+        <label for="apiUrl">API Endpoint</label>
         <input type="text" id="apiUrl" placeholder="http://127.0.0.1:8000/api/plugin/update-token">
-        <div class="hint">从Flow2API管理后台的"插件连接配置"中复制</div>
+        <div class="hint">Copy from "Plugin Connection Config" in the Flow2API admin panel</div>
     </div>
 
     <div class="form-group">
-        <label for="connectionToken">连接Token</label>
-        <input type="text" id="connectionToken" placeholder="输入连接Token">
-        <div class="hint">从Flow2API管理后台的"插件连接配置"中复制</div>
+        <label for="connectionToken">Connection Token</label>
+        <input type="text" id="connectionToken" placeholder="Enter the connection token">
+        <div class="hint">Copy from "Plugin Connection Config" in the Flow2API admin panel</div>
     </div>
 
     <div class="form-group">
-        <label for="refreshInterval">刷新间隔（分钟）</label>
+        <label for="refreshInterval">Refresh Interval (minutes)</label>
         <input type="number" id="refreshInterval" value="60" min="1" max="1440">
-        <div class="hint">建议设置为60分钟（1小时）</div>
+        <div class="hint">Recommended: 60 minutes (1 hour)</div>
     </div>
 
     <div class="button-group">
-        <button class="btn-primary" id="saveBtn">保存配置</button>
-        <button class="btn-secondary" id="testBtn">立即测试</button>
+        <button class="btn-primary" id="saveBtn">Save</button>
+        <button class="btn-secondary" id="testBtn">Test Now</button>
     </div>
 
     <div class="button-group">
-        <button class="btn-secondary" id="logsBtn" style="width: 100%;">📋 查看日志</button>
+        <button class="btn-secondary" id="logsBtn" style="width: 100%;">📋 View Logs</button>
     </div>
 
     <div class="status" id="status"></div>
@@ -152,11 +152,11 @@
     <div class="divider"></div>
 
     <div class="info-section">
-        <strong>📌 使用说明：</strong><br>
-        1. 在Flow2API管理后台获取连接接口和Token<br>
-        2. 填写配置并保存<br>
-        3. 插件将自动定时提取Google Labs的cookie<br>
-        4. 提取的cookie会自动更新到Flow2API系统
+        <strong>📌 Usage:</strong><br>
+        1. Get the API endpoint and token from the Flow2API admin panel<br>
+        2. Fill in the configuration and save<br>
+        3. The extension will automatically extract Google Labs cookies at the scheduled interval<br>
+        4. Extracted cookies are automatically pushed to the Flow2API system
     </div>
 
     <script src="popup.js"></script>

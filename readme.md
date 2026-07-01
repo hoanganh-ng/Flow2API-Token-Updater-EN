@@ -1,27 +1,27 @@
-# 使用说明
+# Usage
 
-需要配合 [Flow2api](https://github.com/TheSmallHanCat/flow2api) 服务使用。
+Must be used together with [Flow2api](https://github.com/TheSmallHanCat/flow2api) service.
 
-## 一、 安装步骤
+## 1. Installation
 
-1.  **打开扩展程序页面**
-    在 Chrome 浏览器地址栏输入并访问：
-    `chrome://extensions/`
+1. **Open the Extensions page**
+   Enter the following URL in the Chrome address bar:
+   `chrome://extensions/`
 
-2.  **开启开发者模式**
-    点击页面右上角的 **“开发者模式”** 开关。
-    ![开启开发者模式](image.png)
+2. **Enable Developer mode**
+   Toggle the **"Developer mode"** switch in the top-right corner of the page.
+   ![Enable Developer Mode](image.png)
 
-3.  **载入插件**
-    将解压后的插件目录直接 **拖拽** 到浏览器页面中，或点击“加载已解压的扩展程序”选择该目录。
-    ![安装插件](image-1.png)
+3. **Load the extension**
+   Drag the unzipped extension folder directly onto the browser page, or click "Load unpacked" and select the folder.
+   ![Install Extension](image-1.png)
 
-## 二、 配置指南
+## 2. Configuration
 
-1.  **设置接口与 Token**
-    点击插件图标，在弹出窗口中配置 **连接接口 (API URL)** 和 **连接 Token**，时间默认60分钟，一般情况下建议6小时左右即可。
-    ![配置界面](image-2.png)
+1. **Set the API endpoint and Token**
+   Click the extension icon and configure the **API Endpoint** and **Connection Token** in the popup window. The default refresh interval is 60 minutes; 6 hours is generally recommended.
+   ![Configuration Screen](image-2.png)
 
-2.  **获取配置信息**
-    如果您不知道如何填写，请登录 **Flow2api 后台** 查看相关的接口地址和访问密钥。
-    ![后台查看配置](image-3.png)
+2. **Get configuration values**
+   If you don't know what to fill in, log in to the **Flow2api admin panel** to find the endpoint URL and access key.
+   ![View Configuration in Admin Panel](image-3.png)
